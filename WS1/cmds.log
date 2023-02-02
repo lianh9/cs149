@@ -1,0 +1,33 @@
+    1  sudo apt install gcc
+    2  sudo apt install make
+    3  pwd
+    4  cd ~
+    5  cd Desktop/
+    6  ls -latr
+    7  mkdir cs149
+    8  cd cs149
+    9  git init
+   10  cd ..
+   11  cd /DEsktop
+   12  cd ./Desktop
+   13  sudo apt install build-essential dkms linux-headers-$(uname -r)
+   14  pwd
+   15  cd ~
+   16  ls -latr
+   17  clear
+   18  pwd
+   19  cd ~
+   20  cd Desktop/
+   21  ls -latr
+   22  mkdir cs149
+   23  cd cs149
+   24  git init
+   25  git remote add origin https://github.com/lianh9/cs149.git
+   26  git config --global user.email "lian.huang@sjsu.edu"
+   27  git config --global user.name "Lian Huang"
+   28  mkdir WS1
+   29  cd WS1
+   30  git add .
+   31  wget -O out.pdf https://tinyurl.com/yy94jltt
+   32  ls -latr
+   33  history > cmds.log
