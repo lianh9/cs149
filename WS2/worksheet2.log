@@ -1,0 +1,26 @@
+    1  sudo apt install gcc
+    2  sudo apt install make
+    3  pwd
+    4  cd ~
+    5  cd Desktop/
+    6  ls -latr
+    7  mkdir cs149
+    8  cd cs149
+    9  git init
+   10  cd ..
+   11  cd /DEsktop
+   12  cd ./Desktop
+   13  sudo apt install build-essential dkms linux-headers-$(uname -r)
+   14  date
+   15  pwd
+   16  cd ~
+   17  cd Desktop/
+   18  ls -latr
+   19  mkdir WS2
+   20  cd WS2
+   21  ls -latr
+   22  echo $?
+   23  man ps
+   24  ps aux
+   25  top
+   26  history > worksheet2.log
