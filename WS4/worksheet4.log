@@ -1,0 +1,23 @@
+  209  wget http://www.apuebook.com/src.3e.tar.gz
+  210  gunzip src.3e.tar.gz
+  211  tar xvf src.3e.tar
+  212  cd apue.3e
+  213  cd proc
+  214  make all
+  215  ./fork1
+  216  ./fork2
+  217  pwd
+  218  pstree
+  219  ps -a -f -x
+  220  ps -a -f -x | more
+  221  top
+  222  man kill
+  223  echo $?
+  224  echo $$
+  225  history > worksheet4.log
+  226  tail worksheet4.log
+  227  cd
+  228  cd Desktop
+  229  cd cs149
+  230  cd WS4
+  231  history > worksheet4.log
