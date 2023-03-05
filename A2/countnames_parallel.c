@@ -16,44 +16,60 @@
 #define MAX_NAMES 100
 #define MAX_C 30
 
+/**
+ * This main function read one or more file from command line and compute the number of occurrences of each name inside the file using multiple processes
+ * Assumption: unique names are not exceed 100 in the file, and the length of each name are within 30 character
+ * Input parameters: argc, argv
+ * Returns: an integer(0 - program normal exit, non 0 - program error)
+**/
 int main(int argc, char *argv[])
 {
-    int fd[2];
-    char name[MAX_NAMES][MAX_C];
-    int count[MAX_NAMES] = {0};
-    int index = 0;
+    // check if any file was given from command line
+    if(argc < 2)
+    {
+        printf("NO input file given\n");
+        exit(1);
+    }
 
+    int fd[2]; // pipes for writing data from the child process and parent process read data send from child processes
+    char name[MAX_NAMES][MAX_C]; // name array placeholder for all the unique names
+    int count[MAX_NAMES] = {0}; // count array placeholder for the occurrences for each name
+    int index = 0; // array index for both name and count array
+
+    // if pipe failed, print error message
     if(pipe(fd) == -1)
     {
         fprintf(stderr, "Pipe failed");
         return 1;
     }
 
-
+    // this for loop go through every file given from the command line and assign ith file to ith child process to perform name count
    for(int i = 1; i < argc; i++)
    {
 
         int childid = fork();
+
+        // child process
         if(childid == 0){
 
-            char name[MAX_NAMES][MAX_C];
-            int count[MAX_NAMES] = {0};
-            char str[MAX_C];
-            int line = 0;
-            int n = 0;
-            int index = 0;
+            char name[MAX_NAMES][MAX_C]; // name array to hold unique name in child process
+            int count[MAX_NAMES] = {0}; // count array to hold occurrences of each name in child process
+            char str[MAX_C]; // str array to hold single name in child process
+            int line = 0; // for tracking the current line in the file while reading
+            int n = 0; // for tracking how many unique names in file
+            int index = 0; // name and count array index
 
             // open file from command line
 	        FILE *f = fopen(argv[i],"r");
-	// if file is empty or no argument is passing, print error message
+        // if file is empty or no argument is passing, print error message
         if (f == NULL)
         {
-            perror("range: cannot open file\n");
+            fprintf(stderr, "range: cannot open file %s\n",argv[i]);
             return(1);
         }
 
 
-	// this while loop read file line by line until reach the end of file
+        // this while loop read file line by line until reach the end of file
         while (fgets(str, MAX_C, f))
         {
             line++;
@@ -114,7 +130,7 @@ int main(int argc, char *argv[])
             close(fd[1]); // close write end of pipe
 
 
-    //the parent waits for each child to finish
+    // the parent waits for each child to finish
     while((wait(NULL)) > 0)
     {
 
@@ -130,10 +146,13 @@ int main(int argc, char *argv[])
         read(fd[0], counts, 100*sizeof(int)); // name count array from child process
         int newName = 1;
 
+        // this for loop for go through the date send from child process
         for(int j = 0; j < n; j++)
         {
+            // this loop is to check if the name send from child process already in the final result name array
             for(int i = 0; i < index; i++)
             {
+                // if the name already exist in the array, increment the count occurrences
                 if(strcmp(name[i],str[j]) == 0)
                 {
                     newName = 0;
@@ -141,6 +160,8 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
+                // if the name is not exist in the array, append the name and increment the count occurrences
+                // then increment array counter to store the next value
                 if(newName)
                 {
                     strcpy(name[index],str[j]);
@@ -149,7 +170,7 @@ int main(int argc, char *argv[])
                 }
         }
     }
-    close(fd[0]);
+    close(fd[0]); // close the read end of pipe
 
     // this loop print the final uique name and their occurrences from all the file
     for(int i = 0; i < index; i++)
@@ -162,7 +183,7 @@ int main(int argc, char *argv[])
 			temp[strlen(temp) - 1] = '\0';
 			strcpy(name[i],temp);
         }
-		printf("%s %c %d\n",name[i],':',count[i]);
+		printf("%-20s %c %d\n",name[i],':',count[i]);
         }
      return 0;
 
