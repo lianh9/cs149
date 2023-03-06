@@ -65,9 +65,8 @@ int main(int argc, char *argv[])
         if (f == NULL)
         {
             fprintf(stderr, "range: cannot open file %s\n",argv[i]);
-            return(1);
+            exit(1);
         }
-
 
         // this while loop read file line by line until reach the end of file
         while (fgets(str, MAX_C, f))
@@ -129,47 +128,61 @@ int main(int argc, char *argv[])
    }
             close(fd[1]); // close write end of pipe
 
-
-    // the parent waits for each child to finish
-    while((wait(NULL)) > 0)
+    // this loop wait for each child process to finish and get child process exit status
+    // only if the child process exited normal(exit with code 0), then get data from child process
+    for(int i = 1; i < argc; i++)
     {
+        int status;
+        // parent process wait for child process
+        wait(&status);
 
-        int n;
-        char str[100][30];
-        int counts[100];
-
-        close(fd[1]); // close write end of pipe
-
-        // read data from the read end of pipe
-        read(fd[0], &n, sizeof(int)); // number of unique name of a certain file from child process
-        read(fd[0], str, 3000); // unique name array from child process
-        read(fd[0], counts, 100*sizeof(int)); // name count array from child process
-        int newName = 1;
-
-        // this for loop for go through the date send from child process
-        for(int j = 0; j < n; j++)
+        // if the child process exited normal
+        if(WIFEXITED(status))
         {
-            // this loop is to check if the name send from child process already in the final result name array
-            for(int i = 0; i < index; i++)
+            int code = WEXITSTATUS(status); // get child exit code
+            // if the child process exited with code 0
+            if(code == 0)
             {
-                // if the name already exist in the array, increment the count occurrences
-                if(strcmp(name[i],str[j]) == 0)
+                int n;
+                char str[100][30];
+                int counts[100];
+
+                close(fd[1]); // close write end of pipe
+
+                // read data from the read end of pipe
+                read(fd[0], &n, sizeof(int)); // number of unique name of a certain file from child process
+                read(fd[0], str, 3000); // unique name array from child process
+                read(fd[0], counts, 100*sizeof(int)); // name count array from child process
+                int newName = 1;
+
+                // this for loop for go through the date send from child process
+                for(int j = 0; j < n; j++)
                 {
-                    newName = 0;
-                    count[i] += counts[j];
-                    break;
+                    // this loop is to check if the name send from child process already in the final result name array
+                    for(int i = 0; i < index; i++)
+                    {
+                        // if the name already exist in the array, increment the count occurrences
+                        if(strcmp(name[i],str[j]) == 0)
+                        {
+                            newName = 0;
+                            count[i] += counts[j];
+                            break;
+                        }
+                    }
+                        // if the name is not exist in the array, append the name and increment the count occurrences
+                        // then increment array counter to store the next value
+                        if(newName)
+                        {
+                            strcpy(name[index],str[j]);
+                            count[index] += counts[j];
+                            index++;
+                        }
                 }
+
             }
-                // if the name is not exist in the array, append the name and increment the count occurrences
-                // then increment array counter to store the next value
-                if(newName)
-                {
-                    strcpy(name[index],str[j]);
-                    count[index] += counts[j];
-                    index++;
-                }
         }
-    }
+   }
+
     close(fd[0]); // close the read end of pipe
 
     // this loop print the final uique name and their occurrences from all the file
