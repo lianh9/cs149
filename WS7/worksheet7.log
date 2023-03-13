@@ -1,0 +1,12 @@
+  423  cd ~/Desktop/
+  424  mkdir ws7
+  425  cd ws7
+  426  ls | wc
+  427  ls | sort
+  428  ls | sort | wc
+  429  ls -latr /bin/ > a.out
+  430  cat a.out | more
+  431  strace ls
+  432  du -sh .
+  433  df -i
+  434  history > worksheet7.log
