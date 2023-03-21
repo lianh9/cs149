@@ -2,7 +2,7 @@
  * Description: This module reads commands for each execution from stdin line by line, then execute commands in a parallel fashion using multiple processes.
  * Author names: Lian Huang
  * Author emails: lian.huang@sjsu.edu
- * Last modified date:3/20/2023
+ * Last modified date:3/21/2023
  * Creation date: 3/16/2023
  **/
 
@@ -26,17 +26,16 @@
 int main(void)
 {
 
-    char * line = NULL;
+    char * line = NULL; // for tracking line when reading from stdin
     size_t len = 0;
     ssize_t read;
 
-    char commands[MAX_NUM_COMMAND][MAX_LEN];
-    char *run_command[MAX_LEN];
-    int i,j,ctr;
-    pid_t pid[MAX_NUM_COMMAND];
-    int num_commands = 0;
-    int pid_out;
-    int pid_err;
+    char commands[MAX_NUM_COMMAND][MAX_LEN]; // for storing parsed command
+    char *run_command[MAX_LEN]; // command buffer for execvp() function
+    int i,j,ctr; // loop counter
+    pid_t pid[MAX_NUM_COMMAND];// child pid
+    int num_commands = 0; // tracking number of commands
+
 
     // get commands from stdin until ctrl d, then parse each command
     while ((read = getline(&line, &len, stdin)) != -1)
@@ -73,7 +72,7 @@ int main(void)
         {
             printf("fork error");
         }
-        // each command will write its stdout and stderr to log files
+        // each command/child process will write its own stdout and stderr to log files
         else if (pid[num_commands] == 0)
         {
 
@@ -81,20 +80,22 @@ int main(void)
             char errFile[MAX_LEN];
             sprintf(outFile, "%d.out", getpid());
             sprintf(errFile, "%d.err", getpid());
-            pid_out = open(outFile, O_RDWR | O_CREAT | O_APPEND, 0777 );
-            pid_err = open(errFile, O_RDWR | O_CREAT | O_APPEND, 0777 );
+            // open pid.out file
+            int pid_out = open(outFile, O_RDWR | O_CREAT | O_APPEND, 0777 );
+            // open pid.err file
+            int pid_err = open(errFile, O_RDWR | O_CREAT | O_APPEND, 0777 );
             // move stdout to pid.out
             dup2(pid_out, 1);
             // move stderr to pid.err
             dup2(pid_err,2);
             dprintf(pid_out,"Starting command %d: child %d pid of parent %d\n", num_commands, getpid(), getppid());
+            close(pid_out);
+            close(pid_err);
             execvp(run_command[0], run_command);
-            fprintf(stderr,"couldn't execute: %s", run_command[0]);
+            // wouldn't reach here unless execvp() failed
+            fprintf(stderr,"couldn't execute command: %s %s\n", run_command[0], run_command[1]);
             exit(1);
         }
-        close(pid_out);
-        close(pid_err);
-
     }
 
     /* parent wait for each child process to finish */
@@ -115,7 +116,7 @@ int main(void)
         char pathname_err[MAX_LEN];
         sprintf(pathname_err, "%d.err", cpid);
         int fd2 = open(pathname_err, O_RDWR | O_APPEND, 0777 );
-
+        // get exit status
         if(WIFEXITED(status))
         {
             int code = WEXITSTATUS(status);
