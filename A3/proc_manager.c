@@ -16,7 +16,7 @@
 
 /**
  * This main function read one or more commands line from stdin and parse the commands, then execute them use execvp() in parallel using multiple processes
- * Assumption: commands not exceed 100, the length of command is within 30 character
+ * Assumption: The number of commands not exceed 100, the length of command is within 30 character, each command within 2 words
  * Input parameters: void
  * Returns: an integer(0 - program normal exit, non 0 - program error)
 **/
@@ -60,7 +60,7 @@ int main(void)
                 j++;
             }
         }
-
+        // assign parsed command to run_command buffer
         run_command[0] = (char *)&commands[0][0];
         run_command[1] = (char *)&commands[1][0];
         run_command[2] = (char *)0;
