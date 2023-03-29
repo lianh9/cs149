@@ -1,0 +1,17 @@
+  609  cd apue.3e
+  610  ls
+  611  cd signals
+  612  clear
+  613  ls
+  614  kate sigusr.c
+  615  make all
+  616  ./sigusr &
+  617  kate sigusr.c
+  618  clear
+  619  make all
+  620  ./sigusr &
+  621  kill -SIGUSR1 21719
+  622  kill -SIGUSR2 21719
+  623  kill -SIGCONT 21719
+  624  kill -9 21719
+  625  history > worksheet9.log
