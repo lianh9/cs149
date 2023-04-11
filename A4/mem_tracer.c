@@ -230,7 +230,7 @@ node_c* linkedList(char* string, int line)
 
 }
 /**
- * This PrintNode() function prints content stored in LinkedList deallocate memory to avoid memory leak
+ * This PrintNode() function prints content stored in LinkedList then deallocate memory to avoid memory leak
  * Assumption: N/A
  * Input parameters: node_c ptr
  * Returns: void
