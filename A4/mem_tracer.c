@@ -76,7 +76,7 @@ void PUSH_TRACE(char* p)          // push p on the stack
   }//if
 
   tnode->functionid=p;
-  tnode->next = TRACE_TOP;  // insert fnode as the first in the list
+  tnode->next = TRACE_TOP;  // insert tnode as the first in the list
   TRACE_TOP=tnode;          // point TRACE_TOP to the first node
 
 }/*end PUSH_TRACE*/
@@ -198,8 +198,8 @@ void FREE(void* p,char* file,int line)
 */
 
 struct node {
-    int n;
-    char* str;
+    int n; // store line number
+    char* str; // store command
     struct node* link;  // ptr to next node
 };
 typedef struct node node_c;
@@ -238,7 +238,7 @@ node_c* linkedList(char* string, int line)
 void PrintNode(node_c* ptr)
 {
     PUSH_TRACE("PrintNode");
-    printf("LinkedList = Node %d  with command: %s\n",ptr->n,ptr->str);
+    printf("LinkedList = Line %d  with command: %s\n",ptr->n,ptr->str);
     if(ptr->link != NULL){
         PrintNode(ptr->link);
     }
@@ -287,11 +287,11 @@ void read_command()
         strcpy(command[line_number], line);
         // store command and line number to LinkedList
         if(line_number == 0){
-            head = linkedList(line,line_number);
+            head = linkedList(line,line_number+1);
             curr = head;
         }
         else{
-            curr->link = linkedList(line,line_number);
+            curr->link = linkedList(line,line_number+1);
             curr = curr->link;
         }
 
