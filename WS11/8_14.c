@@ -24,7 +24,7 @@ typedef struct ContactNode_struct{
  * Returns: void
 **/
 void InitializeContactNode(ContactNode *p){
-    p = NULL;
+    p->nextNodePtr = NULL;
 }
 
 /**
@@ -53,6 +53,7 @@ char* GetPhoneNumber(ContactNode *phone){
     if(phone != NULL){
         strcpy(phoneNumber,phone->contactPhoneNumber);
     }
+
     return phoneNumber;
 
 }
@@ -80,9 +81,10 @@ ContactNode* GetNext(ContactNode *node){
     ContactNode *nextNode;
     if(node->nextNodePtr != NULL){
         nextNode =node->nextNodePtr;
+        return nextNode;
 
     }
-    return nextNode;
+    return NULL;
 
 }
 /**
@@ -96,7 +98,7 @@ void PrintContactNode(ContactNode *ptr){
     while(ptr != NULL){
     printf("Name: %s\n", ptr->contactName);
     printf("Phone number: %s\n\n", ptr->contactPhoneNumber);
-    ptr = ptr->nextNodePtr;
+    ptr = GetNext(ptr);
 
     }
 
@@ -152,6 +154,7 @@ int main()
     printf("Person 1 : %s, %s\n",GetName(first), GetPhoneNumber(first));
     printf("Person 2 : %s, %s\n",GetName(second), GetPhoneNumber(second));
     printf("Person 3 : %s, %s\n\n",GetName(third), GetPhoneNumber(third));
+
     // build linkedlist use function insertAfter()
     insertAfter(first,second);
     insertAfter(second,third);
@@ -167,4 +170,3 @@ int main()
 
     return 0;
 }
-
