@@ -8,8 +8,8 @@
 
 
  /* Answer for the question:
-  * This program runs without error with normall runs
-  * This program has memory leak and indicated with Invalid write of size 4 if run with valgind(--leak-check=yas flag)
+  * This program runs without error with normal runs
+  * This program has memory leak and indicated with Invalid write of size 4 if run with valgind(--leak-check=yes flag)
   * HEAP SUMMARY:
         Invalid write of size 4
         ==4521==    at 0x10916D: main (in /home/lian/Desktop/cs149/WS12/q5)

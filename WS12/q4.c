@@ -9,7 +9,7 @@
 
  /* Answer for the question:
   * This program runs without error with normal runs
-  * This program has memory leak if run with valgind(--leak-check=yas flag)
+  * This program has memory leak if run with valgind(--leak-check=yes flag)
   * HEAP SUMMARY:
         ==4159==     in use at exit: 8 bytes in 1 blocks
         ==4159==   total heap usage: 1 allocs, 0 frees, 8 bytes allocated

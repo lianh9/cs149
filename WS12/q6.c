@@ -9,7 +9,7 @@
 
  /* Answer for the question:
   * This program runs without error with normal runs and prints out 0 for data[20]
-  * This program has no memory leak but with Invalid write of size 4 problem if run with valgind(--leak-check=yas flag)
+  * This program has no memory leak but with Invalid write of size 4 problem if run with valgind(--leak-check=yes flag)
   * HEAP SUMMARY:
         ==4710== Invalid read of size 4
         ==4710==    at 0x1091B7: main (in /home/lian/Desktop/cs149/WS12/q6)
