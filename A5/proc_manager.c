@@ -17,11 +17,11 @@
 
 
 
-
+// struct definition
 struct node {
     int index; // store line number
     char* command; // store command
-    int pid;
+    int pid; //store child pid
     double starttime;
     double finishtime;
     struct node* link;  // ptr to next node
@@ -31,8 +31,8 @@ static char commands[3][100];
 /**
  * This linkedList() function create a node for linkedList
  * Assumption: N/A
- * Input parameters: char* string, int line,int pid,int starttime
- * Returns: ptr
+ * Input parameters: char* string, int line, int pid, int starttime
+ * Returns: node_c *ptr
 **/
 node_c* linkedList(char* string, int line,int pid, int starttime)
 {
@@ -52,11 +52,19 @@ node_c* linkedList(char* string, int line,int pid, int starttime)
     return ptr;
 
 }
-//find a command based on the pid
+
+/**
+ * This FindCommand() function find a command based on the pid
+ * Assumption: N/A
+ * Input parameters: node_c* cmd, int pid
+ * Returns: node_c *tmpNext/Null(if not found)
+**/
 node_c* FindCommand(node_c* cmd, int pid) {
     node_c* tmpNext = cmd;
     while (tmpNext != NULL) {
-    if (tmpNext->pid == pid) { return tmpNext; }
+        if (tmpNext->pid == pid) {
+            return tmpNext;
+        }
     tmpNext = tmpNext->link;
     }
     return NULL;
@@ -64,23 +72,26 @@ node_c* FindCommand(node_c* cmd, int pid) {
 /**
  * This FreeNode() function deallocate memory to avoid memory leak
  * Assumption: N/A
- * Input parameters: node_c ptr
+ * Input parameters: node_c *ptr
  * Returns: void
 **/
 void FreeNode(node_c* ptr)
 {
     if(ptr->link != NULL){
         FreeNode(ptr->link);
-
     }
     free(ptr->command);
     if(ptr->link != NULL){
         free(ptr->link);
     }
-
-
 }
-// parse command for execvp()
+
+/**
+ * This parseCommand() function parse command from stdin for execvp()
+ * Assumption: N/A
+ * Input parameters: char *line
+ * Returns: void
+**/
 void parseCommand(char *line){
     int i,j,ctr; // loop counter
     for (int i=0; i<20; i++)
@@ -126,22 +137,19 @@ int main()
     node_c* head;
     node_c *curr;
 
-    // get commands from stdin until ctrl d, then store each command into dynamic array and LinkedList
+    // get commands from stdin until ctrl d, then store each command into LinkedList
     while ((read = getline(&line, &len, stdin)) != -1)
     {
         line_number++;
-        // if not enough space, realloc double the original size
-
         parseCommand(line);
+
         // assign parsed command to run_command buffer
         run_command[0] = (char *)&commands[0][0];
         run_command[1] = (char *)&commands[1][0];
         run_command[2] = (char *)0;
 
-        //---------------------------
         //fork the commands and record the start times
         //save the startime!
-
         pid = fork();
         clock_gettime(CLOCK_MONOTONIC, &start);
 
@@ -149,7 +157,8 @@ int main()
             fprintf(stderr, "error forking");
             exit(2);
         }
-        else if (pid == 0) { //child
+        //child
+        else if (pid == 0) {
             char outFile[30];
             char errFile[30];
             sprintf(outFile, "%d.out", getpid());
@@ -161,31 +170,35 @@ int main()
             dup2(fdout,1);
             dup2(fderr,2);
             dprintf(fdout, "Starting command INDEX %d: child PID %d of parent PPID %d.\n", line_number, getpid(), getppid() );
+            close(fdout);
+            close(fderr);
             execvp(run_command[0],run_command);
             exit(2);
         }
-        else if (pid > 0) {  // parent goes to the next node
+        // parent
+        else if (pid > 0) {
 
-            //insert the new pid into the hash table
+            //insert the new pid into the LinkedList
             //record the new starttime!
             if(line_number == 1){
                 head = linkedList(line,line_number,pid,start.tv_sec);
                 curr = head;
             }
             else{
-            curr->link = linkedList(line,line_number,pid,start.tv_sec);
-            curr = curr->link;
+                curr->link = linkedList(line,line_number,pid,start.tv_sec);
+                curr = curr->link;
             }
         }
     } //end of while loop
 
 
     while((pid = wait(&status)) >= 0) {
+        //record finish time
         clock_gettime(CLOCK_MONOTONIC, &finish);
         finishtime = finish.tv_sec;
-        //printf("In parent \n");
-        //PrintNode(head);
+
         node_c *entry;
+        // find command base on pid and store finish time
         if((entry = FindCommand(head,pid)) != NULL){
 
             entry->finishtime = finishtime;
@@ -194,6 +207,7 @@ int main()
             printf("look up error, pid %d\n",pid);
             exit(2);
         }
+        // parent
         if(pid > 0) {
             char outFile[30];
             char errFile[30];
@@ -204,23 +218,22 @@ int main()
 
             dprintf(fdout,"Finished child %d pid of parent %d \n",pid,getpid());
 
-
+            // get exitcode
             if (WIFEXITED(status)) {
-                //dprintf(fderr, "Child %d terminated normally with exit code: %d\n",
-                       //pid, WEXITSTATUS(status));
                 dprintf(fderr,"Exited with exitcode = %d\n",WEXITSTATUS(status));
             }
             //signal handling
             else if (WIFSIGNALED(status)) {
-                dprintf(fderr, "Child %d terminated abnormally with signal number: %d\n",
-                       pid, WTERMSIG(status));
+                dprintf(fderr, "Killed with signal number: %d\n",WTERMSIG(status));
             }
 
-            //to compute the elapsed time you subtract
+            //to compute the elapsed time
             elapsed = finishtime - entry->starttime;
             dprintf(fdout,"Finished at %0.2lf, runtime duration %0.lf\n",finishtime,elapsed);
 
+            // restart if elapsed time > 2 sec
             if(elapsed > 2){
+
                 pid = fork();
                 clock_gettime(CLOCK_MONOTONIC, &start);
 
@@ -245,6 +258,8 @@ int main()
                     dprintf(fderr,"RESTARTING\n");
                     dprintf(fdout, "Starting command INDEX %d: child PID %d of parent PPID %d.\n", entry->index, getpid(), getppid() );
                     parseCommand(entry->command);
+                    close(fdout);
+                    close(fderr);
                     run_command[0] = (char *)&commands[0][0];
                     run_command[1] = (char *)&commands[1][0];
                     run_command[2] = (char *)0;
@@ -254,14 +269,14 @@ int main()
                 else if (pid > 0) {
                 curr->link = linkedList(entry->command,entry->index,pid,start.tv_sec);
                 curr = curr->link;
-                //record the new starttime!
-
 
                 }
             }
             else{
 
                 dprintf(fderr,"spawning too fast\n");
+                close(fdout);
+                close(fderr);
             }
 
         }
