@@ -1,0 +1,26 @@
+  - difference between ls -latr filedir1/ and ls -latr filedir2/:
+  - the date and time is different
+  853  cd apue.3e
+  854  ls
+  855  rsync -arv filedir/ filedir1/
+  856  cp -r filedir/ filedir2/
+  857  ls -latr filedir1/
+  858  ls -latr filedir2/
+  859  diff filedir1 filedir2
+  860  diff -qrs filedir1 filedir2
+  861  find . -name access.c
+  862  stat access.c
+  863  ls
+  864  cd filedir1
+  865  ls
+  866  stat access.c
+  867  mkdir test
+  868  rmdir test
+  869  cat -n mycd.c
+  870  wc mycd.c
+  871  diff mycd.c zap.c
+  872  echo "hello"
+  873  du -a
+  874  df
+  875  ps
+  876  history > worksheet13.log
