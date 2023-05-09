@@ -1,3 +1,10 @@
+/**
+ * Description: This module reads two files from command line and employ multi-threading with two threads to count the number of names appearing in each file and store them in a Linkedlist
+ * Author names: Lian Huang
+ * Author emails: lian.huang@sjsu.edu
+ * Last modified date:5/09/2023
+ * Creation date: 5/04/2023
+ **/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,18 +42,12 @@ THREADDATA* p=NULL;
 //variable for indexing of messages by the logging function.
 int logindex=1;
 int *logip = &logindex;
-//The name counts.
-// You can use any data structure you like, here are 2 proposals: a linked list OR
-//an array (up to 100 names).
-//The linked list will be faster since you only need to lock one node, while for
-//the array you need to lock the whole array.
-//You can use a linked list template from A5. You should also consider using a hash
-//table, like in A5 (even faster).
+
 
 struct node {
-    int count; // store line number
-    char name[30]; // store command
-    struct node* next;  // ptr to next node
+    int count; // store name count
+    char name[30]; // store name
+    struct node* next;  // next node
 };
 typedef struct node countName;
 countName* head = NULL;
@@ -54,8 +55,8 @@ countName *curr = NULL;
 
 /**
  * This linkedList() function create a node for linkedList
- * Assumption: N/A
- * Input parameters: char* string, int line
+ * Assumption: the length of each name not exceed 30 characters
+ * Input parameters: char* string, int n
  * Returns: ptr
 **/
 countName* linkedList(char string[30], int n)
@@ -63,8 +64,8 @@ countName* linkedList(char string[30], int n)
     countName* ptr;
     ptr = (countName*) malloc(sizeof(countName));
     if (ptr == NULL) {
-    printf("linkedList: memory allocation error\n");
-    exit(1);
+        printf("linkedList: memory allocation error\n");
+        exit(1);
   }
     ptr->count = n;
     strcpy(ptr->name,string);
@@ -72,6 +73,12 @@ countName* linkedList(char string[30], int n)
     return ptr;
 
 }
+/**
+ * This PrintNode() function prints the content stored in linkedList
+ * Assumption: N/A
+ * Input parameters: countName* ptr
+ * Returns: void
+**/
 void PrintNode(countName* ptr)
 {
     printf("%s : %d\n",ptr->name,ptr->count);
@@ -85,35 +92,39 @@ void PrintNode(countName* ptr)
 }
 
 
-/*********************************************************
-// function main
-*********************************************************/
+/**
+ * This main function create two thread and get two file from command line and assign one file to one thread, then wait each thread to finish the thread_runner function, then print out the result of name count from the two files
+ * Assumption: the length of each name not exceed 30 characters
+ * Input parameters: int argc, char *argv[]
+ * Returns: int
+**/
 int main(int argc, char *argv[]){
-//TODO similar interface as A2: give as command-line arguments three filenames of
-     // check if any file was given from command line
+
+     // check if two file was given from command line
     if(argc < 3){
         printf("Not enough input file given\n");
         exit(1);
     }
      // check if more than two file was given from command line numbers
-     //(the numbers in the files are newline-separated).
     if(argc > 3){
         printf("Only two files are allowed\n");
         exit(1);
     }
-
+    // create two threads
     printf("create first thread\n");
     pthread_create(&tid1,NULL,thread_runner,argv[1]);
     printf("create second thread\n");
     pthread_create(&tid2,NULL,thread_runner,argv[2]);
-    //printf("wait for first thread to exit\n");
+
+    // wait for thread to finish
     pthread_join(tid1,NULL);
     printf("first thread exited\n");
-    //printf("wait for second thread to exit\n");
+
     pthread_join(tid2,NULL);
     printf("second thread exited\n");
+
     //TODO print out the sum variable with the sum of all the numbers
-    printf("==========Name Counts==========\n");
+    printf("========== Name Counts ==========\n");
     PrintNode(head);
     free(head);
 
@@ -122,7 +133,12 @@ int main(int argc, char *argv[]){
 /**********************************************************************
 // function thread_runner runs inside each thread
 **********************************************************************/
-
+/**
+ * This thread_runner() function perform name count task
+ * Assumption: the length of each name not exceed 30 characters
+ * Input parameters: void* x
+ * Returns: NULL
+**/
 void* thread_runner(void* x)
 {
     char *filename = (char*)x;
@@ -155,9 +171,8 @@ void* thread_runner(void* x)
     pthread_mutex_unlock(&tlock2);
     // critical section ends
 
+    pthread_mutex_lock(&tlock1);
     if (p!=NULL && p->creator==me) {
-
-        pthread_mutex_lock(&tlock1);
         if (hours < 12){
             printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: This is thread %ld and I created THREADDATA %p\n",logindex,me,getpid(), day, month, year,hours, minutes, seconds,me,p);
         }
@@ -167,13 +182,10 @@ void* thread_runner(void* x)
         }
         logindex++;
 
-
-        pthread_mutex_unlock(&tlock1);
-
     }
     else {
 
-        pthread_mutex_lock(&tlock1);
+        //pthread_mutex_lock(&tlock1);
         if (hours < 12){
             printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: This is thread %ld and I can access the THREADDATA %p\n",logindex,me,getpid(), day, month, year,hours, minutes, seconds,me,p);
         }
@@ -182,8 +194,9 @@ void* thread_runner(void* x)
             printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm: This is thread %ld and I can access the THREADDATA %p\n",logindex,me,getpid(), day, month, year,hours-12, minutes, seconds,me,p);
         }
         logindex++;
-        pthread_mutex_unlock(&tlock1);
+
     }
+    pthread_mutex_unlock(&tlock1);
 /**
 * //TODO implement any thread name counting functionality you need.
 * Assign one file per thread. Hint: you can either pass each argv filename as a
@@ -194,7 +207,7 @@ logindex anyway
 argv)....
 * //Make sure to use any mutex locks appropriately
 */
-    sleep(2);
+    sleep(1);
     FILE *f = fopen(filename,"r");
     // if file cannot open, print error message
     if (f == NULL){
@@ -212,7 +225,7 @@ argv)....
 
     logindex++;
     pthread_mutex_unlock(&tlock1);
-
+    // read file line by line
     while (fgets(str, 30, f)){
 
         line++;
@@ -234,7 +247,7 @@ argv)....
         else{
             int newName = 1;
             countName* tmp = head;
-
+            // update new count if name exist
             while(tmp != NULL){
                 if (strcmp(tmp->name,str) == 0) {
                     tmp->count++;
@@ -243,7 +256,7 @@ argv)....
                 }
                 tmp = tmp->next;
             }
-
+            // store name in new node if its a new name
             if(newName){
                 curr->next = linkedList(str,1);
                 curr = curr->next;
@@ -266,6 +279,7 @@ argv)....
     if (p!=NULL && p->creator==me) {
         free(p);
         p = NULL;
+        pthread_mutex_lock(&tlock1);
         if (hours < 12){
             printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: This is thread %ld and I deleted THREADDATA\n",logindex,me,getpid(), day, month, year,hours, minutes, seconds,me);
         }
@@ -274,8 +288,10 @@ argv)....
             printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm: This is thread %ld and I deleted THREADDATA\n",logindex,me,getpid(), day, month, year,hours-12, minutes, seconds,me);
         }
         logindex++;
+        pthread_mutex_unlock(&tlock1);
     }
     else {
+        pthread_mutex_lock(&tlock1);
         if (hours < 12){
             printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: This is thread %ld and I can access the THREADDATA\n",logindex,me,getpid(), day, month, year,hours, minutes, seconds,me);
         }
@@ -284,6 +300,7 @@ argv)....
             printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm: This is thread %ld and I can access the THREADDATA\n",logindex,me,getpid(), day, month, year,hours-12, minutes, seconds,me);
         }
         logindex++;
+        pthread_mutex_unlock(&tlock1);
     }
 
     pthread_mutex_unlock(&tlock2);
@@ -293,4 +310,3 @@ argv)....
     return NULL;
 }
 //end thread_runner
-
